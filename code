@@ -1,4 +1,4 @@
-mport argparse
+import argparse
 import sys
 
 def analyze_password(password):
