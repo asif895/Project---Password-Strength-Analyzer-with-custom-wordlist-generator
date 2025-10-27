@@ -1,0 +1,167 @@
+mport argparse
+import sys
+
+def analyze_password(password):
+    """Analyzes password strength using zxcvbn."""
+    if not password:
+        print("Error: Password cannot be empty.")
+        return
+
+    print(f"\n--- Analyzing Password: '{password}' ---")
+    results = zxcvbn(password)
+
+    # Convert score to a simple rating
+    score_mapping = {
+        0: "Very Weak (Instantly crackable)",
+        1: "Weak (Seconds to Minutes)",
+        2: "Fair (Hours to Days)",
+        3: "Good (Weeks to Months)",
+        4: "Strong (Years to Centuries)"
+    }
+
+    print(f"**Strength Score (0-4):** {results['score']}")
+    print(f"**Rating:** {score_mapping.get(results['score'], 'Unknown')}")
+    print(f"**Time to Crack (Offline):** {results['crack_times_display']['offline_slow_hashing_1e4_per_second']}")
+    
+    # Display helpful suggestions
+    if results['feedback']['suggestions']:
+        print("\n**Suggestions to Improve:**")
+        for suggestion in results['feedback']['suggestions']:
+            print(f"- {suggestion}")
+    
+    # Optional: Display matched patterns
+    # print("\nMatched Patterns:", results['sequence'])
+
+# Example of how to call this (not part of the final CLI structure)
+# analyze_password("passw0rd123")
+
+
+def generate_wordlist(name, date, pet, common_words, years_to_append=5):
+    """
+    Generates a custom wordlist based on personal details and common patterns.
+    name, date, pet are strings. common_words is a list.
+    """
+    
+    # 1. Base Words and Uppercase
+    base_list = [name, date, pet] + common_words
+    for word in base_list:
+        if word:
+            word = str(word).lower().strip()
+            wordlist.add(word)
+            wordlist.add(word.capitalize()) # Initial capital
+            wordlist.add(word.upper()) # All caps
+
+    # 2. Leetspeak (Basic)
+    leetspeak_map = {'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7'}
+    leet_words = set()
+    for word in wordlist:
+        leet_word = word
+        # Apply basic leetspeak substitutions
+        for char, sub in leetspeak_map.items():
+            leet_word = leet_word.replace(char, sub)
+        if leet_word != word:
+            leet_words.add(leet_word)
+            
+    wordlist.update(leet_words)
+
+    # 3. Append Common Years (Current year +/- 'years_to_append')
+    import datetime
+    current_year = datetime.datetime.now().year
+    years = [str(current_year + i) for i in range(-years_to_append, 1)]
+    years.extend([str(i) for i in range(1980, 2025)]) # Common birth/event years
+    years = list(set(years))
+
+    final_wordlist = set()
+    for word in wordlist:
+        final_wordlist.add(word)
+        # Append years
+        for year in years:
+            final_wordlist.add(word + year)
+            final_wordlist.add(year + word) # Prepending is also common
+            
+        # Append common symbols/numbers (1, !, @)
+        final_wordlist.add(word + '1')
+        final_wordlist.add(word + '!')
+        final_wordlist.add(word + '@')
+        final_wordlist.add(word + '123')
+        
+    return sorted(list(final_wordlist))
+
+def export_wordlist(wordlist, filename="custom_wordlist.txt"):
+    """Exports the generated wordlist to a plain text file."""
+    try:
+        with open(filename, 'w') as f:
+            for word in wordlist:
+wordlist = set()
+for word in wordlist:
+        final_wordlist.add(word)
+        # Append years
+        for year in years:
+            final_wordlist.add(word + year)
+            final_wordlist.add(year + word) # Prepending is also common
+            
+        # Append common symbols/numbers (1, !, @)
+        final_wordlist.add(word + '1')
+        final_wordlist.add(word + '!')
+        final_wordlist.add(word + '@')
+        final_wordlist.add(word + '123')
+        
+    return sorted(list(final_wordlist))
+
+def export_wordlist(wordlist, filename="custom_wordlist.txt"):
+    """Exports the generated wordlist to a plain text file."""
+    try:
+        with open(filename, 'w') as f:
+            for word in wordlist:
+                f.write(f"{word}\n")
+        print(f"\n✅ Wordlist successfully exported to **{filename}** ({len(wordlist)} entries).")
+        print("This file is ready for use with tools like Hashcat or John the Ripper.")
+    except IOError as e:
+        print(f"❌ Error exporting wordlist to {filename}: {e}")
+
+# ... (Place all functions from Steps 1, 2, and 3 above this main block) ...
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Password Strength Analyzer and Custom Wordlist Generator.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    
+    # Create sub-commands for 'analyze' and 'generate'
+    subparsers = parser.add_subparsers(dest="mode", required=True, help="Select operation mode")
+
+    # --- ANALYZE Mode Subparser ---
+    parser_analyze = subparsers.add_parser('analyze', help='Analyze a single password strength.')
+    parser_analyze.add_argument('password', type=str, help='The password string to analyze.')
+
+    # --- GENERATE Mode Subparser -
+parser_generate = subparsers.add_parser('generate', help='Generate a custom wordlist.')
+    parser_generate.add_argument('-n', '--name', type=str, default='', help='A user\'s name or nickname.')
+    parser_generate.add_argument('-d', '--date', type=str, default='', help='A significant date (e.g., 1990, 0101, 0525).')
+    parser_generate.add_argument('-p', '--pet', type=str, default='', help='A pet\'s name or favorite word.')
+    parser_generate.add_argument('-c', '--common', type=str, default='', 
+                                  help='Comma-separated list of additional common words (e.g., house,school).')
+    parser_generate.add_argument('-o', '--output', type=str, default='custom_wordlist.txt', 
+                                  help='Output filename for the wordlist (.txt). Default: custom_wordlist.txt')
+
+    args = parser.parse_args()
+
+    if args.mode == 'analyze':
+        analyze_password(args.password)
+
+    elif args.mode == 'generate':
+        # Prepare inputs for the generator
+        common_list = [w.strip() for w in args.common.split(',') if w.strip()]
+        
+        # Combine all provided inputs into a list for the generator
+        inputs_for_generation = [args.name, args.date, args.pet]
+        
+        print("\n--- Generating Custom Wordlist ---")
+        print(f"Base Inputs: {inputs_for_generation + common_list}")
+
+        wordlist = generate_wordlist(args.name, args.date, args.pet, common_list)
+        export_wordlist(wordlist, args.output)
+
+if __name__ == "__main__":
+    main()
+
